@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ultra Love Universe</title>
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #ffffff;
+    font-family: Arial;
+}
+
+#startBtn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    padding: 36px 60px;   /* 2x বড় */
+    font-size: 36px;      /* 2x বড় */
+    
+    border: none;
+    border-radius: 28px;
+    
+    background: linear-gradient(45deg,#ff4d6d,#ff99cc);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 25px pink;
+}
+
+/* BIGGER TEXT */
+.love {
+    position: absolute;
+    font-size: 60px;
+    font-weight: 900;
+    color: #ff4d6d;
+    user-select: none;
+    cursor: pointer;
+    text-shadow: 0 0 10px rgba(255,77,109,0.5);
+}
+
+.particle {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+    animation: pop 2s ease-out forwards;
+}
+
+@keyframes pop {
+    0% {
+        transform: translate(0,0) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--x), var(--y)) scale(1.5);
+        opacity: 0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<button id="startBtn">এই যে মেডাম এইখানে চাপ দেন ❤️</button>
+
+<script>
+
+let loves = [];
+const SIZE = 90;
+
+function createLove() {
+    const el = document.createElement("div");
+    el.className = "love";
+    el.innerText = "I Love You 💖";
+
+    let x, y;
+    let safe = false;
+
+    while (!safe) {
+        safe = true;
+        x = Math.random() * (window.innerWidth - 100);
+        y = Math.random() * (window.innerHeight - 100);
+
+        for (let l of loves) {
+            let lx = parseFloat(l.style.left);
+            let ly = parseFloat(l.style.top);
+
+            let dx = lx - x;
+            let dy = ly - y;
+
+            if (Math.sqrt(dx*dx + dy*dy) < SIZE) {
+                safe = false;
+                break;
+            }
+        }
+    }
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+
+    el.vx = (Math.random() - 0.5) * 1.5;
+    el.vy = (Math.random() - 0.5) * 1.5;
+
+    el.onclick = (e) => {
+        e.stopPropagation();
+
+        burst(x, y);
+
+        el.vx += (Math.random() - 0.5) * 12;
+        el.vy += (Math.random() - 0.5) * 12;
+
+        setTimeout(() => {
+            el.vx *= 0.2;
+            el.vy *= 0.2;
+        }, 3000);
+    };
+
+    document.body.appendChild(el);
+    loves.push(el);
+}
+
+/* animation */
+function animate() {
+    for (let i = 0; i < loves.length; i++) {
+        let el = loves[i];
+
+        let x = parseFloat(el.style.left);
+        let y = parseFloat(el.style.top);
+
+        x += el.vx;
+        y += el.vy;
+
+        if (x < 0 || x > window.innerWidth - 80) el.vx *= -1;
+        if (y < 0 || y > window.innerHeight - 80) el.vy *= -1;
+
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+    }
+
+    for (let i = 0; i < loves.length; i++) {
+        for (let j = i + 1; j < loves.length; j++) {
+            let a = loves[i];
+            let b = loves[j];
+
+            let ax = parseFloat(a.style.left);
+            let ay = parseFloat(a.style.top);
+            let bx = parseFloat(b.style.left);
+            let by = parseFloat(b.style.top);
+
+            let dx = bx - ax;
+            let dy = by - ay;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist < SIZE) {
+                let angle = Math.atan2(dy, dx);
+                let move = (SIZE - dist) / 2;
+
+                a.style.left = (ax - Math.cos(angle)*move) + "px";
+                a.style.top  = (ay - Math.sin(angle)*move) + "px";
+
+                b.style.left = (bx + Math.cos(angle)*move) + "px";
+                b.style.top  = (by + Math.sin(angle)*move) + "px";
+            }
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+/* burst */
+function burst(x, y) {
+    const colors = ["#ff4d6d","#ffcc00","#00ffff","#ff66ff","#00ff99"];
+
+    for (let i = 0; i < 15; i++) {
+        const p = document.createElement("div");
+        p.className = "particle";
+        p.innerText = "❤️";
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        p.style.color = colors[Math.floor(Math.random()*colors.length)];
+
+        let angle = Math.random() * Math.PI * 2;
+        let dist = Math.random() * 120;
+
+        p.style.setProperty("--x", Math.cos(angle)*dist + "px");
+        p.style.setProperty("--y", Math.sin(angle)*dist + "px");
+
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 2000);
+    }
+}
+
+/* start */
+document.getElementById("startBtn").onclick = () => {
+    document.getElementById("startBtn").style.display = "none";
+
+    for (let i = 0; i < 30; i++) {
+        createLove();
+    }
+
+    animate();
+};
+
+</script>
+
+</body>
+</html>
